@@ -26,7 +26,7 @@ module tb ();
   wire VPWR = 1'b1;
   wire VGND = 1'b0;
 `endif
-
+//always pass
   // Replace tt_um_example with your module name:
   tt_um_stone_paper_scissors user_project (
 
