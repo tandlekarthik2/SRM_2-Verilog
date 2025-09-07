@@ -40,53 +40,40 @@ module tt_um_stone_paper_scissors (
 
     // Sequential logic
     always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            state  <= S_IDLE;
-            winner <= 2'b00;
-            debug  <= 3'b000;
-        end else begin
-            state <= next_state;
-        end
+    if (reset) begin
+        winner <= 2'b00;
+        debug  <= 3'b000;
+    end else begin
+        winner <= next_winner;
+        debug  <= next_debug;
     end
+end
+
 
     // FSM combinational logic
     always @(*) begin
-        next_state = state;
-        winner     = winner;
-        debug      = debug;
+    next_winner = 2'b00;    // default
+    next_debug  = 3'b000;   // default
 
-        case(state)
-            S_IDLE: begin
-                if (start)
-                    next_state = S_EVALUATE;
+    case (state)
+        S_EVALUATE: begin
+            if (p1_move == 2'b11 || p2_move == 2'b11)
+                next_winner = 2'b11;  // Invalid
+            else if (p1_move == p2_move)
+                next_winner = 2'b00;  // Tie
+            else begin
+                case (p1_move)
+                    2'b00: next_winner = (p2_move == 2'b10) ? 2'b01 : 2'b10; // Stone
+                    2'b01: next_winner = (p2_move == 2'b00) ? 2'b01 : 2'b10; // Paper
+                    2'b10: next_winner = (p2_move == 2'b01) ? 2'b01 : 2'b10; // Scissors
+                    default: next_winner = 2'b11;
+                endcase
             end
+            next_debug = {p1_move[0], p2_move[1:0]};
+        end
+    endcase
+end
 
-            S_EVALUATE: begin
-                // Determine winner
-                if (p1_move == 2'b11 || p2_move == 2'b11)
-                    winner = 2'b11;
-                else if (p1_move == p2_move)
-                    winner = 2'b00;
-                else begin
-                    case(p1_move)
-                        2'b00: winner = (p2_move == 2'b10) ? 2'b01 : 2'b10;
-                        2'b01: winner = (p2_move == 2'b00) ? 2'b01 : 2'b10;
-                        2'b10: winner = (p2_move == 2'b01) ? 2'b01 : 2'b10;
-                        default: winner = 2'b11;
-                    endcase
-                end
-                debug = {p1_move[0], p2_move[1:0]}; // 3 bits
-                next_state = S_RESULT;
-            end
-
-            S_RESULT: begin
-                if (!start)
-                    next_state = S_IDLE;
-            end
-
-            default: next_state = S_IDLE;
-        endcase
-    end
 
     // Output mapping: must be exactly 8 bits
     // state[2:0] + winner[1:0] + debug[2:0] = 8 bits
