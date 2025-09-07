@@ -69,6 +69,7 @@ module tb;
     initial begin
     #1;
     $system("echo '<testsuites></testsuites>' > results.xml");
-end
+    end
+    end
 
 endmodule
