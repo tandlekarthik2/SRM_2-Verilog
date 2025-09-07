@@ -3,38 +3,38 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
-
+from cocotb.triggers import RisingEdge
 
 @cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
+async def stone_paper_scissors_test(dut):
+    """Test the TinyTapeout Stone-Paper-Scissors module"""
 
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
-    cocotb.start_soon(clock.start())
+    # Start clock
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
     # Reset
-    dut._log.info("Reset")
-    dut.ena.value = 1
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
+    dut.ena.value = 0
+    dut.ui_in.value = 0
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     dut.rst_n.value = 1
+    dut.ena.value = 1
 
-    dut._log.info("Test project behavior")
+    # Helper function
+    async def play(p1, p2):
+        dut.ui_in.value = (p2 << 2) | p1 | (1 << 4)  # start=1
+        await RisingEdge(dut.clk)
+        dut.ui_in.value = dut.ui_in.value & ~(1 << 4)  # stop start
+        await RisingEdge(dut.clk)
+        winner = (dut.uo_out.value.integer >> 3) & 0b11
+        return winner
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
-# just pass..
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+    # Test cases
+    assert await play(0, 2) == 1, "P1 Stone vs P2 Scissors failed"
+    assert await play(1, 0) == 1, "P1 Paper vs P2 Stone failed"
+    assert await play(2, 2) == 0, "P1 Scissors vs P2 Scissors failed"
+    assert await play(3, 0) == 3, "Invalid move failed"
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    # assert dut.uo_out.value == 50
+    dut._log.info("All test cases passed!")
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
