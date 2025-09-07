@@ -15,7 +15,7 @@ module tt_um_stone_paper_scissors (
     input  wire rst_n          // global active-low reset
 );
 
-    // Assign unused bidirectional ports
+    // Assign unused bidirectional port
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
