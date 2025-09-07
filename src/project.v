@@ -5,23 +5,79 @@
 
 `default_nettype none
 
-module tt_um_example (
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
-    input  wire       clk,      // clock
-    input  wire       rst_n     // reset_n - low to reset
+module stone_paper_scissors (
+    input wire clk,
+    input wire reset,
+    input wire [1:0] p1_move,  // Player 1 move
+    input wire [1:0] p2_move,  // Player 2 move
+    input wire start,           // Start signal
+    input wire mode,            // Debug mode
+    output reg [1:0] winner,    // 00 = Tie, 01 = P1 wins, 10 = P2 wins, 11 = Invalid
+    output reg [2:0] state,     // FSM state
+    output reg [2:0] debug      // Debug output
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+    // State Encoding
+    localparam S_IDLE     = 3'b000,
+               S_EVALUATE = 3'b001,
+               S_RESULT   = 3'b010,
+               S_RESET    = 3'b011;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+    reg [2:0] next_state;
+
+    // Sequential logic for state transition
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= S_IDLE;
+        else
+            state <= next_state;
+    end
+
+    // FSM next state and output logic
+    always @(*) begin
+        next_state = state;
+        winner = 2'b00;     // Default tie
+        debug = 3'b000;
+
+        case(state)
+            S_IDLE: begin
+                if (start)
+                    next_state = S_EVALUATE;
+            end
+
+            S_EVALUATE: begin
+                // Check for invalid moves
+                if (p1_move == 2'b11 || p2_move == 2'b11) begin
+                    winner = 2'b11; // Invalid
+                end
+                else if (p1_move == p2_move) begin
+                    winner = 2'b00; // Tie
+                end
+                else begin
+                    case(p1_move)
+                        2'b00: winner = (p2_move == 2'b10) ? 2'b01 : 2'b10; // Stone
+                        2'b01: winner = (p2_move == 2'b00) ? 2'b01 : 2'b10; // Paper
+                        2'b10: winner = (p2_move == 2'b01) ? 2'b01 : 2'b10; // Scissors
+                        default: winner = 2'b11; // Invalid
+                    endcase
+                end
+
+                debug = {p1_move[0], p2_move[1:0]}; // Show last moves
+                next_state = S_RESULT;
+            end
+
+            S_RESULT: begin
+                // Stay in result state until reset
+                if (!start)
+                    next_state = S_IDLE;
+            end
+
+            S_RESET: begin
+                next_state = S_IDLE;
+            end
+
+            default: next_state = S_IDLE;
+        endcase
+    end
 
 endmodule
