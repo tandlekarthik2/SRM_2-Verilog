@@ -30,7 +30,7 @@ module tt_um_stone_paper_scissors (
     // Registers
     reg [1:0] winner, next_winner;
     reg [2:0] state;
-    reg [2:0] debug; next_debug;
+    reg [2:0] debug, next_debug;
     reg [2:0] next_state;
 
     // FSM states
