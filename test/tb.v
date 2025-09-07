@@ -1,4 +1,3 @@
-`default_nettype none
 `timescale 1ns/1ps
 `default_nettype none
 
@@ -51,29 +50,31 @@ module tb;
         ui_in[4] = 0; // stop start
         #10;
 
+        // Check output
+        if (uo_out[5:4] !== 2'b01) $display("Test case 1 failed!");
+
         // Test case 2: P1=Paper(01), P2=Stone(00) => P1 wins
         ui_in = 8'b00010100;  // p1=01, p2=00, start=1
         #10;
-        ui_in[4] = 0;
+        ui_in[4] = 0; // stop start
         #10;
+        if (uo_out[5:4] !== 2'b01) $display("Test case 2 failed!");
 
         // Test case 3: P1=Scissors(10), P2=Scissors(10) => Tie
         ui_in = 8'b00101000;  // p1=10, p2=10, start=1
         #10;
         ui_in[4] = 0;
         #10;
+        if (uo_out[5:4] !== 2'b00) $display("Test case 3 failed!");
 
         // Test case 4: Invalid move P1=11
         ui_in = 8'b00001100;  // p1=11, p2=00, start=1
         #10;
         ui_in[4] = 0;
         #10;
+        if (uo_out[5:4] !== 2'b11) $display("Test case 4 failed!");
 
         $display("All test cases completed.");
-
-        // Generate dummy results.xml for GitHub Actions
-        $system("echo '<testsuites></testsuites>' > results.xml");
-
         $finish;
     end
 
