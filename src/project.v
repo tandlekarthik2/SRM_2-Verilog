@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module stone_paper_scissors (
+module tt_um_stone_paper_scissors (
     input wire clk,
     input wire reset,
     input wire [1:0] p1_move,  // Player 1 move
