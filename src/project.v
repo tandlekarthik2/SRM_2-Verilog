@@ -11,6 +11,7 @@ module tt_um_stone_paper_scissors (
     input  wire [7:0] uio_in,  // bidirectional (unused)
     output wire [7:0] uio_out, // bidirectional (unused)
     output wire [7:0] uio_oe,  // bidirectional (unused)
+    input  wire ena,           // REQUIRED enable signal
     input  wire clk,           // global clock
     input  wire rst_n          // global active-low reset
 );
@@ -27,9 +28,9 @@ module tt_um_stone_paper_scissors (
     wire       reset    = ~rst_n;      // Internal active-high reset
 
     // Internal registers
-    reg [1:0] winner;   // 00 = Tie, 01 = P1 wins, 10 = P2 wins, 11 = Invalid
-    reg [2:0] state;    // FSM state
-    reg [2:0] debug;    // Debug info
+    reg [1:0] winner;        // 00 = Tie, 01 = P1 wins, 10 = P2 wins, 11 = Invalid
+    reg [2:0] state;         // FSM state
+    reg [2:0] debug;         // Debug info
     reg [2:0] next_state;
 
     // State Encoding
@@ -90,7 +91,8 @@ module tt_um_stone_paper_scissors (
         endcase
     end
 
-    // Map outputs to 8-bit bus
-    assign uo_out = {state, winner, debug[1:0]};
+    // Output is only valid when ena is high
+    assign uo_out = ena ? {state, winner, debug[1:0]} : 8'b0;
 
 endmodule
+
