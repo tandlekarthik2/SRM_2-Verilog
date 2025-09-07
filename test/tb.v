@@ -28,7 +28,7 @@ module tb ();
 `endif
 
   // Replace tt_um_example with your module name:
-  Chip-bootcamp-practice_SRM_2-Verilog user_project (
+  tt_um_stone_paper_scissors user_project (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST
