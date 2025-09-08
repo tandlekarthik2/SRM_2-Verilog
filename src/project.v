@@ -92,5 +92,5 @@ module tt_um_stone_paper_scissors (
     // Output mapping (8 bits)
     // Format: {state[2:0], winner[1:0], debug[2:0]}
     assign uo_out = ena ? {state, winner, debug} : 8'b0;
-
+ 
 endmodule
