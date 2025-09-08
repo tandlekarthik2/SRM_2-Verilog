@@ -1,75 +1,43 @@
-`timescale 1ns/1ps
-`default_nettype none
+module tb ();
 
-module tb;
-
-    // Clock and reset
-    reg clk = 0;
-    reg rst_n = 0;
-
-    // TinyTapeout signals
-    reg [7:0] ui_in = 8'b0;
-    wire [7:0] uo_out;
-    wire [7:0] uio_out;
-    wire [7:0] uio_oe;
-    reg ena = 0;
-
-    // Clock generation (10ns period)
-    always #5 clk = ~clk;
-
-    // Instantiate DUT
-    tt_um_stone_paper_scissors dut (
-        .ui_in(ui_in),
-        .uo_out(uo_out),
-        .uio_in(8'b0),
-        .uio_out(uio_out),
-        .uio_oe(uio_oe),
-        .ena(ena),
-        .clk(clk),
-        .rst_n(rst_n)
-    );
-
-    // Helper task to apply moves
-    task play(input [1:0] p1, input [1:0] p2);
-        begin
-            ui_in = {2'b0, p2, p1, 1'b1}; // start=1
-            #10;
-            ui_in[4] = 0; // stop start
-            #10;
-        end
-    endtask
-
-    initial begin
-        // Open VCD waveform
-        $dumpfile("tb.vcd");
-        $dumpvars(0, tb);
-
-        // Reset
-        rst_n = 0;
-        ena   = 0;
-        #20;
-        rst_n = 1;
-        ena   = 1;
-        #10;
-
-        // Test case 1: P1=Stone(0), P2=Scissors(2) => P1 wins
-        play(2'b00, 2'b10);
-
-        // Test case 2: P1=Paper(1), P2=Stone(0) => P1 wins
-        play(2'b01, 2'b00);
-
-        // Test case 3: P1=Scissors(2), P2=Scissors(2) => Tie
-        play(2'b10, 2'b10);
-
-        // Test case 4: Invalid move P1=11
-        play(2'b11, 2'b00);
-
-        $display("All test cases completed.");
-
-    initial begin
+  // Dump the signals to a VCD file. You can view it with gtkwave or surfer.
+  initial begin
+    $dumpfile("tb.vcd");
+    $dumpvars(0, tb);
     #1;
-    $system("echo '<testsuites></testsuites>' > results.xml");
-    end
-    end
+  end
+
+  // Wire up the inputs and outputs:
+  reg clk;
+  reg rst_n;
+  reg ena;
+  reg [7:0] ui_in;
+  reg [7:0] uio_in;
+  wire [7:0] uo_out;
+  wire [7:0] uio_out;
+  wire [7:0] uio_oe;
+`ifdef GL_TEST
+  wire VPWR = 1'b1;
+  wire VGND = 1'b0;
+`endif
+
+  // Replace tt_um_example with your module name:
+  tt_um_stone_paper_scissors user_project (
+
+      // Include power ports for the Gate Level test:
+`ifdef GL_TEST
+      .VPWR(VPWR),
+      .VGND(VGND),
+`endif
+
+      .ui_in  (ui_in),    // Dedicated inputs
+      .uo_out (uo_out),   // Dedicated outputs
+      .uio_in (uio_in),   // IOs: Input path
+      .uio_out(uio_out),  // IOs: Output path
+      .uio_oe (uio_oe),   // IOs: Enable path (active high: 0=input, 1=output)
+      .ena    (ena),      // enable - goes high when design is selected
+      .clk    (clk),      // clock
+      .rst_n  (rst_n)     // not reset
+  );
 
 endmodule
